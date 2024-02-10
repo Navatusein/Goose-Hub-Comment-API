@@ -17,7 +17,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/goose-hub-authentication-api   
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/goose-hub-comment-api   
           tags: |
             type=raw,value=dev-${{ github.sha }} 
             type=raw,value=dev-latest 
