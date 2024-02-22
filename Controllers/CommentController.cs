@@ -62,20 +62,63 @@ namespace CommentAPI.Controllers
         /// <remarks>Add comments for movie, anime or serial</remarks>
         /// <param name="id"></param>
         /// <param name="commentDto"></param>
-        /// <response code="200">OK</response>
+        /// <response code="201">Created</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="404">Not Found</response>
         [HttpPost]
-        [Route("/api/comment-api/v1/content/{id}")]
+        [Route("content/{id}")]
         [Authorize(Roles = "User,Admin")]
-        [SwaggerResponse(statusCode: 200, type: typeof(CommentDto), description: "OK")]
+        [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> PostContentId([FromRoute(Name = "id")] string id, [FromBody] CommentDto commentDto)
         {
             //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(CommentDto));
+            // return StatusCode(201, default(CommentDto));
             //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
             // return StatusCode(404, default(ErrorDto));
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Reply Comment
+        /// </summary>
+        /// <remarks>Reply on comment</remarks>
+        /// <param name="commentId"></param>
+        /// <param name="commentDto"></param>
+        /// <response code="201">Created</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="404">Not Found</response>
+        [HttpPost]
+        [Route("reply/{commentId}")]
+        [Authorize(Roles = "User,Admin")]
+        [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
+        [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
+        public async Task<IActionResult> PostReplyCommentId([FromRoute(Name = "commentId")] string commentId, [FromBody] CommentDto commentDto)
+        {
+            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
+            // return StatusCode(201, default(CommentDto));
+            //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
+            // return StatusCode(404, default(ErrorDto));
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get User Comments
+        /// </summary>
+        /// <remarks>Get all user comments</remarks>
+        /// <response code="200">OK</response>
+        /// <response code="401">Unauthorized</response>
+        [HttpGet]
+        [Route("user")]
+        [SwaggerResponse(statusCode: 200, type: typeof(List<CommentDto>), description: "OK")]
+        public async Task<IActionResult> GetUser()
+        {
+            var userId = User.Claims.First(x => x.Type == "UserId").ToString();
+
+            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
+            // return StatusCode(200, default(List<CommentDto>));
 
             throw new NotImplementedException();
         }
