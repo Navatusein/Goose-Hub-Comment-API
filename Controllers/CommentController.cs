@@ -73,7 +73,12 @@ namespace CommentAPI.Controllers
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> GetContentId([FromRoute(Name = "id")] string id, CancellationToken cancellationToken)
         {
-            var result = await _clientContentExis.GetResponse<ContentExistResponse>(new ContentExistEvent() { ContentId = id }, cancellationToken);
+            var contentExistEvent = new ContentExistEvent()
+            {
+                ContentId = id
+            };
+
+            var result = await _clientContentExis.GetResponse<ContentExistResponse>(contentExistEvent, cancellationToken);
 
             if (!result.Message.IsExists)
                 return StatusCode(404, new ErrorDto("Content not found", "404"));
@@ -101,7 +106,12 @@ namespace CommentAPI.Controllers
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> PostContentId([FromRoute(Name = "id")] string id, [FromBody] CommentDto commentDto, CancellationToken cancellationToken)
         {
-            var result = await _clientContentExis.GetResponse<ContentExistResponse>(new ContentExistEvent() { ContentId = id }, cancellationToken);
+            var contentExistEvent = new ContentExistEvent() 
+            { 
+                ContentId = id 
+            };
+
+            var result = await _clientContentExis.GetResponse<ContentExistResponse>(contentExistEvent, cancellationToken);
 
             if (!result.Message.IsExists)
                 return StatusCode(404, new ErrorDto("Content not found", "404"));
