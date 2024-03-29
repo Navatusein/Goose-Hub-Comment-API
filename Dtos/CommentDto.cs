@@ -2,12 +2,11 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 
-namespace CommentAPI.Dto
+namespace CommentAPI.Dtos
 {
     /// <summary>
-    /// 
+    /// Dto for Comment
     /// </summary>
-    [DataContract]
     public class CommentDto
     {
         /// <summary>
@@ -43,22 +42,5 @@ namespace CommentAPI.Dto
         /// Gets or Sets Thread
         /// </summary>
         public List<CommentDto> Thread { get; set; } = new List<CommentDto>();
-
-        /// <summary>
-        /// Returns the string presentation of the object
-        /// </summary>
-        /// <returns>String presentation of the object</returns>
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            sb.Append("class CommentDto {\n");
-            sb.Append("  Id: ").Append(Id).Append("\n");
-            sb.Append("  UserId: ").Append(UserId).Append("\n");
-            sb.Append("  Dispatch: ").Append(Dispatch).Append("\n");
-            sb.Append("  Message: ").Append(Message).Append("\n");
-            sb.Append("  Thread: ").Append(Thread.Select(x => x.ToString())).Append("\n");
-            sb.Append("}\n");
-            return sb.ToString();
-        }
     }
 }

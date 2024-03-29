@@ -2,10 +2,10 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 
-namespace CommentAPI.Dto
+namespace CommentAPI.Dtos
 {
     /// <summary>
-    /// Model for errors
+    /// Model for error responses
     /// </summary>
     public class ErrorDto
     {

@@ -1,7 +1,9 @@
 using CommentAPI.AppMaping;
+using CommentAPI.MassTransit.Events;
 using CommentAPI.Middleware;
 using CommentAPI.Service;
 using CommentAPI.Service.DataService;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -68,8 +70,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Configure Frontend Authentication Service
-/*builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => {
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -81,7 +84,7 @@ builder.Services.AddSwaggerGen(options =>
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AuthorizeJWT:Key"]))
         };
     });
-*/
+
 
 // Configure Automapper
 builder.Services.AddAutoMapper(typeof(AppMappingService));
@@ -89,6 +92,25 @@ builder.Services.AddAutoMapper(typeof(AppMappingService));
 // Add MongoDbConnectionService
 builder.Services.AddSingleton<MongoDbConnectionService>();
 builder.Services.AddSingleton<CommentService>();
+
+// Add MassTransit
+builder.Services.AddMassTransit(options =>
+{
+    options.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("comment-api", false));
+
+    options.UsingRabbitMq((context, config) =>
+    {
+        var host = builder.Configuration.GetSection("RabbitMq:Host").Get<string>();
+
+        config.Host(host, "/", host =>
+        {
+            host.Username(builder.Configuration.GetSection("RabbitMq:Username").Get<string>());
+            host.Password(builder.Configuration.GetSection("RabbitMq:Password").Get<string>());
+        });
+
+        config.ConfigureEndpoints(context);
+    });
+});
 
 var app = builder.Build();
 

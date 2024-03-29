@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
-using CommentAPI.Dto;
+using CommentAPI.Dtos;
+using CommentAPI.MassTransit.Events;
+using CommentAPI.MassTransit.Responses;
 using CommentAPI.Models;
 using CommentAPI.Service.DataService;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -15,18 +18,22 @@ namespace CommentAPI.Controllers
     [ApiController]
     public class CommentController : ControllerBase
     {
-        private static Serilog.ILogger Logger=>Serilog.Log.ForContext<CommentController>();
+        private static Serilog.ILogger Logger => Serilog.Log.ForContext<CommentController>();
 
         private readonly IMapper _mapper;
         private readonly CommentService _dataService;
+        private readonly IRequestClient<ContentExistEvent> _clientContentExis;
+        private readonly IPublishEndpoint _publishEndpoint;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public CommentController(IMapper mapper, CommentService dataService)
+        public CommentController(IMapper mapper, CommentService dataService, IRequestClient<ContentExistEvent> clientContentExis, IPublishEndpoint publishEndpoint)
         {
             _mapper = mapper;
             _dataService = dataService;
+            _clientContentExis = clientContentExis;
+            _publishEndpoint = publishEndpoint;
         }
 
         /// <summary>
@@ -64,15 +71,15 @@ namespace CommentAPI.Controllers
         [Route("content/{id}")]
         [SwaggerResponse(statusCode: 200, type: typeof(List<CommentDto>), description: "OK")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
-        public async Task<IActionResult> GetContentId([FromRoute(Name = "id")] string id)
+        public async Task<IActionResult> GetContentId([FromRoute(Name = "id")] string id, CancellationToken cancellationToken)
         {
-            var models = await _dataService.GetCommentsAsync(id);
-            var dtos = models.Select(x => _mapper.Map<CommentDto>(x)).ToList();
+            var result = await _clientContentExis.GetResponse<ContentExistResponse>(new ContentExistEvent() { ContentId = id }, cancellationToken);
 
-            if (dtos == null)
-            {
-                return StatusCode(404, new ErrorDto("Comments not found", "404"));
-            }
+            if (!result.Message.IsExists)
+                return StatusCode(404, new ErrorDto("Content not found", "404"));
+
+            var models = await _dataService.GetCommentsByContentIdAsync(id);
+            var dtos = models.Select(x => _mapper.Map<CommentDto>(x)).ToList();
 
             return StatusCode(200, dtos);
         }
@@ -92,11 +99,14 @@ namespace CommentAPI.Controllers
         [AllowAnonymous]
         [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
-        public async Task<IActionResult> PostContentId([FromRoute(Name = "id")] string id, [FromBody] CommentDto commentDto)
+        public async Task<IActionResult> PostContentId([FromRoute(Name = "id")] string id, [FromBody] CommentDto commentDto, CancellationToken cancellationToken)
         {
-            var model = await _dataService.AddCommentAsync(_mapper.Map<Comment>(commentDto));
+            var result = await _clientContentExis.GetResponse<ContentExistResponse>(new ContentExistEvent() { ContentId = id }, cancellationToken);
 
-            //return StatusCode(404, new ErrorDto("Movie not found", "404"));
+            if (!result.Message.IsExists)
+                return StatusCode(404, new ErrorDto("Content not found", "404"));
+
+            var model = await _dataService.AddCommentAsync(_mapper.Map<Comment>(commentDto));
             
             return StatusCode(201, model);
         }
@@ -123,7 +133,9 @@ namespace CommentAPI.Controllers
             if (model == null)
                 return StatusCode(404, new ErrorDto("Comment not found", "404"));
 
-            return StatusCode(200, model);
+            var dto = _mapper.Map<CommentDto>(model);
+
+            return StatusCode(200, dto);
         }
 
         /// <summary>
