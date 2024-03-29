@@ -1,4 +1,7 @@
-﻿using CommentAPI.Dto;
+﻿using AutoMapper;
+using CommentAPI.Dto;
+using CommentAPI.Models;
+using CommentAPI.Service.DataService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -12,6 +15,20 @@ namespace CommentAPI.Controllers
     [ApiController]
     public class CommentController : ControllerBase
     {
+        private static Serilog.ILogger Logger=>Serilog.Log.ForContext<CommentController>();
+
+        private readonly IMapper _mapper;
+        private readonly CommentService _dataService;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public CommentController(IMapper mapper, CommentService dataService)
+        {
+            _mapper = mapper;
+            _dataService = dataService;
+        }
+
         /// <summary>
         /// Delete Comment
         /// </summary>
@@ -22,17 +39,18 @@ namespace CommentAPI.Controllers
         /// <response code="403">Forbidden</response>
         [HttpDelete]
         [Route("comment/{id}")]
-        [Authorize(Roles = "User,Admin")]
+        //[Authorize(Roles = "User,Admin")]
+        [AllowAnonymous]
+        [SwaggerResponse(statusCode: 200, description: "OK")]
         [SwaggerResponse(statusCode: 403, type: typeof(ErrorDto), description: "Forbidden")]
         public async Task<IActionResult> DeleteCommentId([FromRoute(Name = "id")] string id)
         {
+            var isDeleted = await _dataService.DeleteAsync(id);
 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200);
-            //TODO: Uncomment the next line to return response 403 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(403, default(ErrorDto));
+            if (!isDeleted)
+                return StatusCode(403, new ErrorDto("Comment forbidden", "403"));
 
-            throw new NotImplementedException();
+            return StatusCode(200);
         }
 
         /// <summary>
@@ -48,12 +66,15 @@ namespace CommentAPI.Controllers
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> GetContentId([FromRoute(Name = "id")] string id)
         {
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<CommentDto>));
-            //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(404, default(ErrorDto));
+            var models = await _dataService.GetCommentsAsync(id);
+            var dtos = models.Select(x => _mapper.Map<CommentDto>(x)).ToList();
 
-            throw new NotImplementedException();
+            if (dtos == null)
+            {
+                return StatusCode(404, new ErrorDto("Comments not found", "404"));
+            }
+
+            return StatusCode(200, dtos);
         }
 
         /// <summary>
@@ -67,17 +88,17 @@ namespace CommentAPI.Controllers
         /// <response code="404">Not Found</response>
         [HttpPost]
         [Route("content/{id}")]
-        [Authorize(Roles = "User,Admin")]
+        //[Authorize(Roles = "User,Admin")]
+        [AllowAnonymous]
         [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> PostContentId([FromRoute(Name = "id")] string id, [FromBody] CommentDto commentDto)
         {
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(201, default(CommentDto));
-            //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(404, default(ErrorDto));
+            var model = await _dataService.AddCommentAsync(_mapper.Map<Comment>(commentDto));
 
-            throw new NotImplementedException();
+            //return StatusCode(404, new ErrorDto("Movie not found", "404"));
+            
+            return StatusCode(201, model);
         }
 
         /// <summary>
@@ -91,17 +112,18 @@ namespace CommentAPI.Controllers
         /// <response code="404">Not Found</response>
         [HttpPost]
         [Route("reply/{commentId}")]
-        [Authorize(Roles = "User,Admin")]
+        //[Authorize(Roles = "User,Admin")]
+        [AllowAnonymous]
         [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> PostReplyCommentId([FromRoute(Name = "commentId")] string commentId, [FromBody] CommentDto commentDto)
         {
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(201, default(CommentDto));
-            //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(404, default(ErrorDto));
+            var model = await _dataService.ReplyCommentAsync(commentId, _mapper.Map<Comment>(commentDto));
 
-            throw new NotImplementedException();
+            if (model == null)
+                return StatusCode(404, new ErrorDto("Comment not found", "404"));
+
+            return StatusCode(200, model);
         }
 
         /// <summary>
@@ -117,10 +139,10 @@ namespace CommentAPI.Controllers
         {
             var userId = User.Claims.First(x => x.Type == "UserId").ToString();
 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<CommentDto>));
+            var models = await _dataService.GetCommentsByUserIdAsync(userId);
+            var dtos = models.Select(x => _mapper.Map<CommentDto>(x)).ToList();
 
-            throw new NotImplementedException();
+            return StatusCode(200, dtos);
         }
     }
 }

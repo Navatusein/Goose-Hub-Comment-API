@@ -13,7 +13,7 @@ namespace CommentAPI.Dto
         /// <summary>
         /// Gets or Sets Id
         /// </summary>
-        public string Id { get; set; } = null!;
+        public string? Id { get; set; }
 
         /// <summary>
         /// Gets or Sets UserId

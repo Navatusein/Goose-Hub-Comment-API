@@ -5,11 +5,28 @@ using System.Runtime.Serialization;
 namespace CommentAPI.Dto
 {
     /// <summary>
-    /// 
+    /// Model for errors
     /// </summary>
-    [DataContract]
     public class ErrorDto
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ErrorDto(string message, string code)
+        {
+            Id = Guid.NewGuid().ToString();
+            Message = message;
+            Code = code;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ErrorDto()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
+
         /// <summary>
         /// Gets or Sets Id
         /// </summary>
@@ -27,20 +44,5 @@ namespace CommentAPI.Dto
         /// </summary>
         [Required]
         public string Code { get; set; } = null!;
-
-        /// <summary>
-        /// Returns the string presentation of the object
-        /// </summary>
-        /// <returns>String presentation of the object</returns>
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            sb.Append("class ErrorDto {\n");
-            sb.Append("  Id: ").Append(Id).Append("\n");
-            sb.Append("  Message: ").Append(Message).Append("\n");
-            sb.Append("  Code: ").Append(Code).Append("\n");
-            sb.Append("}\n");
-            return sb.ToString();
-        }
     }
 }

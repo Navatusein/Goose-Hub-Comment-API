@@ -1,5 +1,7 @@
+using CommentAPI.AppMaping;
 using CommentAPI.Middleware;
 using CommentAPI.Service;
+using CommentAPI.Service.DataService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -66,7 +68,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // Configure Frontend Authentication Service
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+/*builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -79,9 +81,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AuthorizeJWT:Key"]))
         };
     });
+*/
+
+// Configure Automapper
+builder.Services.AddAutoMapper(typeof(AppMappingService));
 
 // Add MongoDbConnectionService
 builder.Services.AddSingleton<MongoDbConnectionService>();
+builder.Services.AddSingleton<CommentService>();
 
 var app = builder.Build();
 
