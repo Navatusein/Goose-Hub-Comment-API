@@ -1,5 +1,6 @@
 ﻿using CommentAPI.Models;
 using MongoDB.Driver;
+using System.Xml.Linq;
 
 namespace CommentAPI.Service.DataService
 {
@@ -23,6 +24,16 @@ namespace CommentAPI.Service.DataService
         }
 
         /// <summary>
+        /// Get Comment
+        /// </summary>
+        public async Task<Comment> GetAsync(string id)
+        {
+            var filter = Builders<Comment>.Filter.Eq("Id", id);
+            var model = await _collection.Find(filter).FirstOrDefaultAsync();
+            return model;
+        }
+
+        /// <summary>
         /// Delete Comment
         /// </summary>
         public async Task<bool> DeleteAsync(string id)
@@ -40,7 +51,6 @@ namespace CommentAPI.Service.DataService
             var filter = Builders<Comment>.Filter.Eq("ContentId", id);
             var result = await _collection.Find(filter).ToListAsync();
             return result;
-
         }
 
         /// <summary>
@@ -48,11 +58,8 @@ namespace CommentAPI.Service.DataService
         /// </summary>
         public async Task<Comment> AddCommentAsync(Comment comment)
         {
-            
             await _collection.InsertOneAsync(comment);
-
             return comment;
-
         }
 
 
@@ -82,7 +89,6 @@ namespace CommentAPI.Service.DataService
             var filter = Builders<Comment>.Filter.Eq("UserId", id);
             var result = await _collection.Find(filter).ToListAsync();
             return result;
-
         }
     }
 }

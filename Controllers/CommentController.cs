@@ -46,16 +46,22 @@ namespace CommentAPI.Controllers
         /// <response code="403">Forbidden</response>
         [HttpDelete]
         [Route("comment/{id}")]
-        //[Authorize(Roles = "User,Admin")]
-        [AllowAnonymous]
+        [Authorize(Roles = "User,Admin")]
         [SwaggerResponse(statusCode: 200, description: "OK")]
         [SwaggerResponse(statusCode: 403, type: typeof(ErrorDto), description: "Forbidden")]
         public async Task<IActionResult> DeleteCommentId([FromRoute(Name = "id")] string id)
         {
-            var isDeleted = await _dataService.DeleteAsync(id);
+            var userId = User.Claims.First(x => x.Type == "UserId").ToString();
 
-            if (!isDeleted)
-                return StatusCode(403, new ErrorDto("Comment forbidden", "403"));
+            var model = await _dataService.GetAsync(id);
+
+            if (model == null)
+                return StatusCode(404, new ErrorDto("Comment not found", "404"));
+
+            if (model.UserId != userId)
+                return StatusCode(403, new ErrorDto("Forbidden", "403"));
+
+            await _dataService.DeleteAsync(id);
 
             return StatusCode(200);
         }
@@ -100,8 +106,7 @@ namespace CommentAPI.Controllers
         /// <response code="404">Not Found</response>
         [HttpPost]
         [Route("content/{id}")]
-        //[Authorize(Roles = "User,Admin")]
-        [AllowAnonymous]
+        [Authorize(Roles = "User,Admin")]
         [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> PostContentId([FromRoute(Name = "id")] string id, [FromBody] CommentDto commentDto, CancellationToken cancellationToken)
@@ -132,8 +137,7 @@ namespace CommentAPI.Controllers
         /// <response code="404">Not Found</response>
         [HttpPost]
         [Route("reply/{commentId}")]
-        //[Authorize(Roles = "User,Admin")]
-        [AllowAnonymous]
+        [Authorize(Roles = "User,Admin")]
         [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
         public async Task<IActionResult> PostReplyCommentId([FromRoute(Name = "commentId")] string commentId, [FromBody] CommentDto commentDto)
