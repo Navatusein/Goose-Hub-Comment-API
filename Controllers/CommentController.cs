@@ -22,17 +22,17 @@ namespace CommentAPI.Controllers
 
         private readonly IMapper _mapper;
         private readonly CommentService _dataService;
-        private readonly IRequestClient<ContentExistEvent> _clientContentExis;
+        private readonly IRequestClient<ContentExistEvent> _clientContentExist;
         private readonly IPublishEndpoint _publishEndpoint;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public CommentController(IMapper mapper, CommentService dataService, IRequestClient<ContentExistEvent> clientContentExis, IPublishEndpoint publishEndpoint)
+        public CommentController(IMapper mapper, CommentService dataService, IRequestClient<ContentExistEvent> clientContentExist, IPublishEndpoint publishEndpoint)
         {
             _mapper = mapper;
             _dataService = dataService;
-            _clientContentExis = clientContentExis;
+            _clientContentExist = clientContentExist;
             _publishEndpoint = publishEndpoint;
         }
 
@@ -84,7 +84,7 @@ namespace CommentAPI.Controllers
                 ContentId = id
             };
 
-            var result = await _clientContentExis.GetResponse<ContentExistResponse>(contentExistEvent, cancellationToken);
+            var result = await _clientContentExist.GetResponse<ContentExistResponse>(contentExistEvent, cancellationToken);
 
             if (!result.Message.IsExists)
                 return StatusCode(404, new ErrorDto("Content not found", "404"));
@@ -116,7 +116,7 @@ namespace CommentAPI.Controllers
                 ContentId = id 
             };
 
-            var result = await _clientContentExis.GetResponse<ContentExistResponse>(contentExistEvent, cancellationToken);
+            var result = await _clientContentExist.GetResponse<ContentExistResponse>(contentExistEvent, cancellationToken);
 
             if (!result.Message.IsExists)
                 return StatusCode(404, new ErrorDto("Content not found", "404"));
