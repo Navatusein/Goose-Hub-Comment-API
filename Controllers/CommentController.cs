@@ -51,7 +51,7 @@ namespace CommentAPI.Controllers
         [SwaggerResponse(statusCode: 403, type: typeof(ErrorDto), description: "Forbidden")]
         public async Task<IActionResult> DeleteCommentId([FromRoute(Name = "id")] string id)
         {
-            var userId = User.Claims.First(x => x.Type == "UserId").ToString();
+            var userId = User.Claims.First(x => x.Type == "UserId").Value.ToString();
 
             var model = await _dataService.GetAsync(id);
 
@@ -163,7 +163,7 @@ namespace CommentAPI.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(List<CommentDto>), description: "OK")]
         public async Task<IActionResult> GetUser()
         {
-            var userId = User.Claims.First(x => x.Type == "UserId").ToString();
+            var userId = User.Claims.First(x => x.Type == "UserId").Value.ToString();
 
             var models = await _dataService.GetCommentsByUserIdAsync(userId);
             var dtos = models.Select(x => _mapper.Map<CommentDto>(x)).ToList();
