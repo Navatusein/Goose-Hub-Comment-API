@@ -14,7 +14,7 @@ namespace CommentAPI.Controllers
     /// <summary>
     /// Comment Controller
     /// </summary>
-    [Route("/api/comment-api/v1")]
+    [Route("v1")]
     [ApiController]
     public class CommentController : ControllerBase
     {
