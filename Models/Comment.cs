@@ -34,7 +34,7 @@ namespace CommentAPI.Models
         /// Gets or Sets Dispatch
         /// </summary>
         [Required]
-        public DateTime Dispatch { get; set; }
+        public DateOnly Dispatch { get; set; }
 
         /// <summary>
         /// Gets or Sets Message
