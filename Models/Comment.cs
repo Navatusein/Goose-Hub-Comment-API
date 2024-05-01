@@ -45,7 +45,7 @@ namespace CommentAPI.Models
         /// <summary>
         /// Gets or Sets Thread
         /// </summary>
-        public List<CommentDto> Thread { get; set; } = new List<CommentDto>();
+        public List<Comment> Thread { get; set; } = new List<Comment>();
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using CommentAPI.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Xml.Linq;
 
@@ -68,6 +69,8 @@ namespace CommentAPI.Service.DataService
         /// </summary>
         public async Task<Comment> ReplyCommentAsync(string id, Comment comment)
         {
+            comment.Id = ObjectId.GenerateNewId().ToString();
+
             var filter = Builders<Comment>.Filter.Eq("Id", id);
             var update = Builders<Comment>.Update.Push("Thread", comment);
 

@@ -138,9 +138,10 @@ namespace CommentAPI.Controllers
         [HttpPost]
         [Route("reply/{commentId}")]
         [Authorize(Roles = "User,Admin")]
+        [AllowAnonymous]
         [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
-        public async Task<IActionResult> PostReplyCommentId([FromRoute(Name = "commentId")] string commentId, [FromBody] CommentDto commentDto)
+        public async Task<IActionResult> PostReplyCommentId([FromRoute] string commentId, [FromBody] CommentDto commentDto)
         {
             var model = await _dataService.ReplyCommentAsync(commentId, _mapper.Map<Comment>(commentDto));
 
