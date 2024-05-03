@@ -15,6 +15,11 @@ namespace CommentAPI.Dtos
         public string? Id { get; set; }
 
         /// <summary>
+        /// Gets or Sets ParentId
+        /// </summary>
+        public string? ParentId { get; set; }
+
+        /// <summary>
         /// Gets or Sets UserId
         /// </summary>
         [Required]
@@ -39,8 +44,8 @@ namespace CommentAPI.Dtos
         public string Message { get; set; } = null!;
 
         /// <summary>
-        /// Gets or Sets Thread
+        /// Gets or Sets Replies
         /// </summary>
-        public List<CommentDto> Thread { get; set; } = new List<CommentDto>();
+        public List<string>? Replies { get; set; }
     }
 }

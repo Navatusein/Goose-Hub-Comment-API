@@ -35,16 +35,6 @@ namespace CommentAPI.Service.DataService
         }
 
         /// <summary>
-        /// Delete Comment
-        /// </summary>
-        public async Task<bool> DeleteAsync(string id)
-        {
-            var filter = Builders<Comment>.Filter.Eq("Id", id);
-            var model = await _collection.FindOneAndDeleteAsync(filter);
-            return model != null;
-        }
-
-        /// <summary>
         /// Get Comments
         /// </summary>
         public async Task<List<Comment>> GetCommentsByContentIdAsync(string id)
@@ -61,27 +51,6 @@ namespace CommentAPI.Service.DataService
         {
             await _collection.InsertOneAsync(comment);
             return comment;
-        }
-
-
-        /// <summary>
-        /// Reply Comment
-        /// </summary>
-        public async Task<Comment> ReplyCommentAsync(string id, Comment comment)
-        {
-            comment.Id = ObjectId.GenerateNewId().ToString();
-
-            var filter = Builders<Comment>.Filter.Eq("Id", id);
-            var update = Builders<Comment>.Update.Push("Thread", comment);
-
-            var options = new FindOneAndUpdateOptions<Comment>
-            {
-                ReturnDocument = ReturnDocument.After
-            };
-
-            var model = await _collection.FindOneAndUpdateAsync(filter, update, options);
-
-            return model;
         }
 
         /// <summary>

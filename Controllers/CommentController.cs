@@ -14,7 +14,7 @@ namespace CommentAPI.Controllers
     /// <summary>
     /// Comment Controller
     /// </summary>
-    [Route("v1")]
+    [Route("v1/comments")]
     [ApiController]
     public class CommentController : ControllerBase
     {
@@ -34,36 +34,6 @@ namespace CommentAPI.Controllers
             _dataService = dataService;
             _clientContentExist = clientContentExist;
             _publishEndpoint = publishEndpoint;
-        }
-
-        /// <summary>
-        /// Delete Comment
-        /// </summary>
-        /// <remarks>Delete comment by comment id</remarks>
-        /// <param name="id">Comment Id</param>
-        /// <response code="200">OK</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="403">Forbidden</response>
-        [HttpDelete]
-        [Route("comment/{id}")]
-        [Authorize(Roles = "User,Admin")]
-        [SwaggerResponse(statusCode: 200, description: "OK")]
-        [SwaggerResponse(statusCode: 403, type: typeof(ErrorDto), description: "Forbidden")]
-        public async Task<IActionResult> DeleteCommentId([FromRoute(Name = "id")] string id)
-        {
-            var userId = User.Claims.First(x => x.Type == "UserId").Value.ToString();
-
-            var model = await _dataService.GetAsync(id);
-
-            if (model == null)
-                return StatusCode(404, new ErrorDto("Comment not found", "404"));
-
-            if (model.UserId != userId)
-                return StatusCode(403, new ErrorDto("Forbidden", "403"));
-
-            await _dataService.DeleteAsync(id);
-
-            return StatusCode(200);
         }
 
         /// <summary>
@@ -92,6 +62,11 @@ namespace CommentAPI.Controllers
             var models = await _dataService.GetCommentsByContentIdAsync(id);
             var dtos = models.Select(x => _mapper.Map<CommentDto>(x)).ToList();
 
+            dtos.ForEach(x =>
+            {
+                x.Replies = dtos.Where(y => y.Id == x.ParentId).Select(y => y.Id!).ToList();
+            });
+
             return StatusCode(200, dtos);
         }
 
@@ -99,21 +74,20 @@ namespace CommentAPI.Controllers
         /// Add Comment
         /// </summary>
         /// <remarks>Add comments for movie, anime or serial</remarks>
-        /// <param name="id"></param>
         /// <param name="commentDto"></param>
         /// <response code="201">Created</response>
         /// <response code="401">Unauthorized</response>
         /// <response code="404">Not Found</response>
         [HttpPost]
-        [Route("content/{id}")]
+        [Route("content")]
         [Authorize(Roles = "User,Admin")]
         [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
         [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
-        public async Task<IActionResult> PostContentId([FromRoute(Name = "id")] string id, [FromBody] CommentDto commentDto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostContentId([FromBody] CommentDto commentDto, CancellationToken cancellationToken)
         {
             var contentExistEvent = new ContentExistEvent() 
             { 
-                ContentId = id 
+                ContentId = commentDto.ContentId
             };
 
             var result = await _clientContentExist.GetResponse<ContentExistResponse>(contentExistEvent, cancellationToken);
@@ -121,35 +95,17 @@ namespace CommentAPI.Controllers
             if (!result.Message.IsExists)
                 return StatusCode(404, new ErrorDto("Content not found", "404"));
 
+            if (commentDto.ParentId != null)
+            {
+                var parent = await _dataService.GetAsync(commentDto.ParentId!);
+
+                if (parent == null)
+                    return StatusCode(404, new ErrorDto("Comment not found", "404"));
+            }
+
             var model = await _dataService.AddCommentAsync(_mapper.Map<Comment>(commentDto));
             
             return StatusCode(201, model);
-        }
-
-        /// <summary>
-        /// Reply Comment
-        /// </summary>
-        /// <remarks>Reply on comment</remarks>
-        /// <param name="commentId"></param>
-        /// <param name="commentDto"></param>
-        /// <response code="201">Created</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="404">Not Found</response>
-        [HttpPost]
-        [Route("reply/{commentId}")]
-        [Authorize(Roles = "User,Admin")]
-        [SwaggerResponse(statusCode: 201, type: typeof(CommentDto), description: "Created")]
-        [SwaggerResponse(statusCode: 404, type: typeof(ErrorDto), description: "Not Found")]
-        public async Task<IActionResult> PostReplyCommentId([FromRoute] string commentId, [FromBody] CommentDto commentDto)
-        {
-            var model = await _dataService.ReplyCommentAsync(commentId, _mapper.Map<Comment>(commentDto));
-
-            if (model == null)
-                return StatusCode(404, new ErrorDto("Comment not found", "404"));
-
-            var dto = _mapper.Map<CommentDto>(model);
-
-            return StatusCode(200, dto);
         }
 
         /// <summary>

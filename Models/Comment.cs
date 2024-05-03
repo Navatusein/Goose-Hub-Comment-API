@@ -17,6 +17,10 @@ namespace CommentAPI.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
+        /// <summary>
+        /// Gets or Sets ParentId
+        /// </summary>
+        public string? ParentId { get; set; }
 
         /// <summary>
         /// Gets or Sets UserId
@@ -41,11 +45,6 @@ namespace CommentAPI.Models
         /// </summary>
         [Required]
         public string Message { get; set; } = null!;
-
-        /// <summary>
-        /// Gets or Sets Thread
-        /// </summary>
-        public List<Comment> Thread { get; set; } = new List<Comment>();
     }
 }
 
