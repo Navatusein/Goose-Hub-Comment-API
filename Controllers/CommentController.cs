@@ -62,10 +62,10 @@ namespace CommentAPI.Controllers
             var models = await _dataService.GetCommentsByContentIdAsync(id);
             var dtos = models.Select(x => _mapper.Map<CommentDto>(x)).ToList();
 
-            dtos.ForEach(x =>
+            foreach (var item in dtos)
             {
-                x.Replies = dtos.Where(y => y.Id == x.ParentId).Select(y => y.Id!).ToList();
-            });
+                item.Replies = dtos.Where(y => y.ParentId == item.Id).Select(y => y.Id!).ToList();
+            }
 
             return StatusCode(200, dtos);
         }
