@@ -1,5 +1,9 @@
+using CommentAPI.AppMaping;
+using CommentAPI.MassTransit.Events;
 using CommentAPI.Middleware;
 using CommentAPI.Service;
+using CommentAPI.Service.DataService;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -67,7 +71,8 @@ builder.Services.AddSwaggerGen(options =>
 
 // Configure Frontend Authentication Service
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => {
+    .AddJwtBearer(options =>
+    {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -80,16 +85,56 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
+// Configure Automapper
+builder.Services.AddAutoMapper(typeof(AppMappingService));
+
 // Add MongoDbConnectionService
 builder.Services.AddSingleton<MongoDbConnectionService>();
+builder.Services.AddSingleton<CommentService>();
+
+// Add MassTransit
+builder.Services.AddMassTransit(options =>
+{
+    options.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("comment-api", false));
+
+    options.UsingRabbitMq((context, config) =>
+    {
+        var host = builder.Configuration.GetSection("RabbitMq:Host").Get<string>();
+        var virtualHost = builder.Configuration.GetSection("RabbitMq:VirtualHost").Get<string>();
+
+        config.Host(host, virtualHost, host =>
+        {
+            host.Username(builder.Configuration.GetSection("RabbitMq:Username").Get<string>());
+            host.Password(builder.Configuration.GetSection("RabbitMq:Password").Get<string>());
+        });
+
+        config.ConfigureEndpoints(context);
+    });
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger(option =>
+    {
+        option.RouteTemplate = "swagger/{documentName}/swagger.json";
+        option.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+        {
+            swaggerDoc.Servers = new List<OpenApiServer> {
+                new OpenApiServer {
+                    Url = builder.Configuration.GetSection("BaseUrl").Get<string?>() ?? $"{httpReq.Scheme}://{httpReq.Host.Value}/"
+                }
+            };
+        });
+    });
+
+    app.UseSwaggerUI(option =>
+    {
+        option.DocumentTitle = "Comment API";
+    });
 }
 
 // Add Exception Handling Middleware

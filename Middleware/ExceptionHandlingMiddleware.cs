@@ -1,4 +1,4 @@
-﻿using CommentAPI.Dto;
+﻿using CommentAPI.Dtos;
 using System.Net;
 using System.Text.Json;
 
@@ -13,7 +13,7 @@ namespace CommentAPI.Middleware
         private readonly RequestDelegate _next;
 
         /// <summary>
-        /// Constructor of class ExceptionHandlingMiddleware
+        /// Constructor
         /// </summary>
         public ExceptionHandlingMiddleware(RequestDelegate next)
         {
@@ -41,10 +41,7 @@ namespace CommentAPI.Middleware
 
             var response = context.Response;
 
-            var errorDto = new ErrorDto()
-            {
-                Id = Guid.NewGuid().ToString()
-            };
+            var errorDto = new ErrorDto();
 
             Logger.Error(exception, "Handle Exception");
 
